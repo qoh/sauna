@@ -1,0 +1,10 @@
+
+* {
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.clearfix {
+  clear: both;
+}
+

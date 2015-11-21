@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Chat</title>
+    <link rel="stylesheet" href="shared.css">
+    <link rel="stylesheet" href="theme-dark.css">
+    <link rel="stylesheet" href="chat.css">
+  </head>
+  <body>
+    <div id="header">
+      <!-- <div class="user-block">
+        <img class="user-block-avatar"></img>
+        <div>
+          <div class="user-block-name"></div>
+          <div class="user-block-status"></div>
+          <div class="user-block-game"></div>
+        </div>
+      </div> -->
+      <div id="user-block"></div>
+    </div>
+
+    <div id="messages"></div>
+    <textarea id="new_message" autofocus></textarea>
+
+    <script src="../node_modules/react/dist/react.js"></script>
+    <script src="../node_modules/react-dom/dist/react-dom.js"></script>
+
+    <script src="user-status.js"></script>
+    <script src="user-block.js"></script>
+    <script src="chat.js"></script>
+  </body>
+</html>
