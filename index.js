@@ -7,7 +7,7 @@ const fs = require("fs");
 const prompt = require("cli-prompt");
 const notifier = require("node-notifier");
 const app = require("app");
-const ipc = require("ipc");
+const ipc = require("electron").ipcMain;
 const Tray = require("tray");
 const Menu = require("menu");
 const BrowserWindow = require("browser-window");
@@ -18,41 +18,34 @@ const user = new SteamUser(null, {
 });
 
 const LOGIN_KEY_PATH = `${app.getPath("userData")}/Login Key`;
-const APP_ICON_PATH = `${__dirname}/icon.png`;
+const APP_ICON_32_PATH = `${__dirname}/icon_32x.png`;
+const APP_ICON_16_PATH = `${__dirname}/icon_16x.png`;
 
-fs.readFile(LOGIN_KEY_PATH, "utf-8", (err, data) => {
-  if (err) {
-    prompt.multi([
-      {key: "accountName", label: "username"},
-      {key: "password", type: "password"},
-      {key: "remember", type: "boolean", label: "remember password", default: "true"}
-    ], res => {
-      console.log("Logging in");
+let loginWindow = null;
+let loginSentryCallback = null;
 
-      user.logOn({
-        accountName: res.accountName,
-        password: res.password,
-        rememberPassword: res.remember
-      });
-    });
-  } else {
-    console.log("Logging in with key");
-    data = JSON.parse(data);
+let friendsWindow = null;
+let chatWindow = new Map();
 
-    user.logOn({
-      accountName: data.accountName,
-      loginKey: data.loginKey
-    });
-  }
-});
+let trayIcon;
 
 user.on("loggedOn", details => {
+  if (loginWindow != null) {
+    loginWindow.close();
+  }
+
   console.log("Logged in");
   user.setPersona(SteamUser.Steam.EPersonaState.Online);
 });
 
 user.on("steamGuard", (domain, callback) => {
-  prompt("steam guard: ", callback);
+  if (loginWindow === null) {
+    throw new Error("Steam Guard with no login window");
+  }
+
+  loginSentryCallback = callback;
+  loginWindow.webContents.send("sentry", domain);
+  // prompt("steam guard: ", callback);
 });
 
 user.on("loginKey", key => {
@@ -65,11 +58,6 @@ user.on("loginKey", key => {
     if (err) throw err;
   });
 });
-
-let friendsWindow = null;
-let chatWindow = new Map();
-
-let trayIcon;
 
 user.on("user", (steamId, persona) => {
   let hash = persona.avatar_hash.toHex();
@@ -100,7 +88,7 @@ function getChatWindow(steam_id) {
     width: 800,
     height: 600,
     title: user.users[steam_id] ? `${user.users[steam_id].player_name} - Sauna` : "... - Sauna",
-    icon: APP_ICON_PATH
+    icon: APP_ICON_32_PATH
   });
 
   window.on("closed", () => chatWindow.delete(key));
@@ -128,7 +116,7 @@ function getFriendsWindow() {
     width: 600,
     height: 800,
     title: "Friends - Sauna",
-    icon: APP_ICON_PATH
+    icon: APP_ICON_32_PATH
   });
 
   friendsWindow.on("closed", () => friendsWindow = null);
@@ -158,13 +146,66 @@ function getFriendsWindow() {
 app.on("window-all-closed", () => {});
 
 app.on("ready", () => {
-  trayIcon = new Tray(APP_ICON_PATH);
+  trayIcon = new Tray(APP_ICON_16_PATH);
   trayIcon.setContextMenu(Menu.buildFromTemplate([
     {label: "Friends", click: () => getFriendsWindow().show()},
     {label: "Exit", click: () => app.quit()}
   ]));
+
   trayIcon.setToolTip("Sauna");
   trayIcon.on("click", () => getFriendsWindow().show());
+  
+  fs.readFile(LOGIN_KEY_PATH, "utf-8", (err, data) => {
+    if (err) {
+      console.log("failed to read", LOGIN_KEY_PATH);
+      console.log(err);
+
+      loginWindow = new BrowserWindow({
+        width: 800,
+        height: 600,
+        title: "Login - Sauna",
+        icon: APP_ICON_32_PATH
+      });
+
+      loginWindow.on("closed", () => {
+        loginWindow = null;
+        loginSentryCallback = null;
+      });
+
+      loginWindow.setAutoHideMenuBar(true);
+      loginWindow.loadUrl(`file://${__dirname}/views/login.html`);
+      
+      /* prompt.multi([
+        {key: "accountName", label: "username"},
+        {key: "password", type: "password"},
+        {key: "remember", type: "boolean", label: "remember password", default: "true"}
+      ], res => {
+        console.log("Logging in");
+
+        user.logOn({
+          accountName: res.accountName,
+          password: res.password,
+          rememberPassword: res.remember
+        });
+      }); */
+    } else {
+      console.log("Logging in with key");
+      data = JSON.parse(data);
+
+      user.logOn({
+        accountName: data.accountName,
+        loginKey: data.loginKey
+      });
+    }
+  });
+});
+
+ipc.on("login", (event, props) => {
+  user.logOn(props);
+});
+
+ipc.on("sentry", (event, code) => {
+  loginSentryCallback(code);
 });
 
 ipc.on("chat", (event, steamId) => {
@@ -192,7 +233,7 @@ user.on("friendMessage", (sender, message) => {
     notifier.notify({
       title: user.users[sender].player_name,
       message,
-      icon: APP_ICON_PATH,
+      icon: APP_ICON_32_PATH,
       window
     });
 
