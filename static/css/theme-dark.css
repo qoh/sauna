@@ -1,0 +1,50 @@
+body {
+  color: #ccc;
+  background-color: #333;
+
+  font-family: "Noto Sans", "Helvetica", "Arial", sans-serif;
+  font-size: 16px;
+}
+
+:focus {
+  outline: #a73 solid 2px;
+}
+
+input {
+  padding: .5em;
+  border: none;
+  color: #aaa;
+  background-color: #222;
+}
+
+input:focus {
+  color: #ccc;
+  background-color: #2c2c2c;
+}
+
+textarea {
+  padding: .5em;
+  border: none;
+  color: #aaa;
+  background-color: #222;
+  
+  font-family: "Noto Sans", "Helvetica", "Arial", sans-serif;
+  font-size: 16px;
+}
+
+textarea:focus {
+  color: #ccc;
+  background-color: #2c2c2c;
+}
+
+button {
+  padding: 8px;
+  border: none;
+  font-weight: bold;
+  color: #ddd;
+  background-color: #111;
+}
+
+.sk-folding-cube .sk-cube:before {
+  background-color: #ccc;
+}

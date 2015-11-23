@@ -1,0 +1,50 @@
+.user-block {
+  font-size: 14px;
+  flex-direction: row;
+  align-items: center;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
+.user-block.online {
+  color: #7ad;
+}
+.user-block.online>img {
+  border-color: #7ad;
+  background-color: #9cf;
+}
+
+.user-block.ingame {
+  color: #6b6;
+}
+.user-block.ingame>img {
+  border-color: #6b6;
+  background-color: #8d8;
+}
+
+.user-block.gone {
+  color: #d99;
+  opacity: 0.75;
+}
+.user-block.gone>img {
+  border-color: #d99;
+  background-color: #fbb;
+}
+
+.user-block.offline {
+  color: #aaa;
+  opacity: 0.5;
+}
+.user-block.offline>img {
+  border-color: #aaa;
+  background-color: #ccc;
+}
+
+.user-block>img {
+  width: 32px;
+  height: 32px;
+  margin: 8px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  background-color: #ccc;
+}

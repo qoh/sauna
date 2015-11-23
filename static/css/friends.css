@@ -1,0 +1,19 @@
+body {
+  padding: 8px;
+}
+
+.user-block {
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.user-block:hover {
+  background-color: rgba(255, 255, 255, .1);
+}
+
+.group-header {
+  background-color: #222;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin: 4px 0;
+}

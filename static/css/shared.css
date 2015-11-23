@@ -1,0 +1,33 @@
+div, span,
+/* added */ body, form {
+  box-sizing: border-box;
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  align-content: flex-start;
+
+  border: 0 solid black;
+  margin: 0;
+  padding: 0;
+}
+
+textarea {
+  resize: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track-piece {
+  border-radius: 4px;
+  background-color: #262626;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: #484848;
+}

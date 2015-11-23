@@ -1,0 +1,42 @@
+html, body {
+  height: 100%;
+}
+
+header {
+  background-color: #484848;
+  padding: 4px;
+}
+
+#messages {
+  /* margin: 0 6px;
+  padding: 0 8px; */
+  padding: 4px;
+  flex: 1;
+  overflow-y: scroll;
+}
+
+.message {
+  /* margin: 4px 0; */
+  margin: 4px;
+}
+.message-other {
+  align-items: flex-start;
+  text-align: left;
+}
+.message-self {
+  align-items: flex-end;
+  text-align: right;
+}
+.message-content {
+  margin-bottom: 2px;
+  padding: 6px;
+  border-radius: 4px;
+  background-color: #484848;
+}
+.message-extra {
+  font-size: 10px;
+  color: #777;
+}
+
+textarea {
+  border-top: 2px solid #484848;

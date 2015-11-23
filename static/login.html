@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/theme-dark.css">
+    <link rel="stylesheet" href="css/login.css">
+  </head>
+  <body tabindex="-1">
+    <div id="container">
+      <div id="section_wait" class="section disabled">
+        <div class="sk-folding-cube">
+          <div class="sk-cube1 sk-cube"></div>
+          <div class="sk-cube2 sk-cube"></div>
+          <div class="sk-cube4 sk-cube"></div>
+          <div class="sk-cube3 sk-cube"></div>
+        </div>
+      </div>
+      <form id="section_main" class="section disabled">
+        <p style="display: none" id="error_text"></p>
+        <label for="input_username">Username</label>
+        <input type="text" id="input_username" autofocus>
+        <label for="input_password">Password</label>
+        <input type="password" id="input_password">
+        <div class="form-section">
+          <input type="checkbox" id="input_remember" checked>
+          <label for="input_remember">Remember password</label>
+        </div>
+        <button type="submit">Log In</button>
+      </form>
+      <form id="section_sentry" class="section disabled">
+        <div style="text-align: center; margin-bottom: 16px" id="sentry_source"></div>
+        <input type="text" placeholder="Steam Guard code" id="input_sentry">
+        <button type="submit">Log In</button>
+      </form>
+    </div>
+    <script src="login.js"></script>
+  </body>
+</html>
