@@ -27,7 +27,7 @@ textarea {
   border: none;
   color: #aaa;
   background-color: #222;
-  
+
   font-family: "Noto Sans", "Helvetica", "Arial", sans-serif;
   font-size: 16px;
 }
@@ -43,6 +43,11 @@ button {
   font-weight: bold;
   color: #ddd;
   background-color: #111;
+}
+
+button:hover {
+  background-color: #262626;
+  outline: #222 solid 2px;
 }
 
 .sk-folding-cube .sk-cube:before {

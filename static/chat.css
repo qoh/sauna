@@ -3,8 +3,25 @@ html, body {
 }
 
 header {
-  background-color: #484848;
+  background-color: #2f2f2f;
   padding: 4px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#user_info {
+  color: #888;
+  flex: 1;
+  text-align: right;
+  margin-right: 12px;
+}
+
+#user_dropdown {
+  margin: 6px;
+  width: 40px;
+  font-size: 20px;
 }
 
 #messages {
@@ -32,6 +49,9 @@ header {
   padding: 6px;
   border-radius: 4px;
   background-color: #484848;
+}
+.message-echo .message-content {
+  background-color: #486868;
 }
 .message-extra {
   font-size: 10px;

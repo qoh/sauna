@@ -1,5 +1,5 @@
 {
   "cmd": "./node_modules/electron-prebuilt/dist/electron",
-  "args": ["{PROJECT_PATH}"],
+  "args": ["{PROJECT_PATH}", "--no-tray"],
   "sh": false
 }

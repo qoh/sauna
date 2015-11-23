@@ -1,7 +1,8 @@
+/*jshint node: true */
+/*jshint esnext: true */
 "use strict";
 
 const electron = require("electron");
-const app = electron.app;
 const dialog = electron.dialog;
 
 // Install a basic error handler that can be used before the app.ready event
@@ -25,20 +26,42 @@ process.on("uncaughtException", error => {
   }
 });
 
+const app = electron.app;
+const yargs = require("yargs");
 const SaunaApp = require("./SaunaApp.js");
 
-let shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
-  // if (myWindow) {
-  //   if (myWindow.isMinimized()) myWindow.restore();
-  //   myWindow.focus();
-  // }
+function parseOptions(commandLine) {
+  return yargs
+    .usage("Usage: $o [options]")
+    .boolean("new-instance")
+    .describe("new-instance", "Start a new instance even when running")
+    .boolean("tray")
+    .default("tray", true)
+    .describe("tray", "Run in the background and close to tray")
+    .alias("tray", "t")
+    .help("h")
+    .alias("h", "help")
+    .parse(commandLine);
+}
 
-  return true;
-});
+let options = parseOptions(process.argv);
+console.log(options);
 
-if (shouldQuit) {
-  // app.quit();
-  // return;
+if (!options["new-instance"]) {
+  let shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+    let newOptions = parseOptions(commandLine);
+
+    if (global.saunaApp) {
+      global.saunaApp.receiveOptions(newOptions, workingDirectory);
+    }
+
+    return true;
+  });
+
+  if (shouldQuit) {
+    app.quit();
+    return;
+  }
 }
 
 app.on("ready", () => {
@@ -59,6 +82,6 @@ app.on("ready", () => {
   };
 
   // Create an instance of the singleton app, which will take things from here
-  const app = new SaunaApp();
+  const app = new SaunaApp(options);
   global.saunaApp = app;
 });
