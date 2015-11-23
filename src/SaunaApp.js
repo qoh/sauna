@@ -301,7 +301,7 @@ class SaunaApp extends EventEmitter {
         try {
           data = JSON.parse(data);
         } catch (newErr) {
-          err = err;
+          err = newErr;
         }
       }
 
