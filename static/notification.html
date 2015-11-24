@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <style>
+      div, body, img {
+        box-sizing: border-box;
+        position: relative;
+
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        flex-shrink: 0;
+        align-content: flex-start;
+
+        border: 0 solid black;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        padding: 12px;
+        flex-direction: row;
+        align-items: flex-start;
+
+        font-family: "Noto Sans", Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        word-wrap: break-word;
+
+        color: #bbb;
+        background-color: #222;
+        overflow: hidden;
+
+        -webkit-user-select: none;
+        cursor: pointer;
+      }
+
+      #right {
+        margin-left: 8px;
+        flex: 1;
+      }
+
+      #title {
+        margin-bottom: 4px;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      #image {
+        width: 32px;
+        height: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <img id="image">
+    <div id="right">
+      <div id="title"></div>
+      <div id="body"></div>
+    </div>
+
+    <script>
+      (function() {
+        /*jshint esnext: true */
+        "use strict";
+
+        const ipc = require("electron").ipcRenderer;
+
+        let params = JSON.parse(decodeURIComponent(
+          document.location.hash.substr(1)));
+
+        let id = params.id;
+        let options = params.options;
+
+        image.src = options.image || "icons/icon_32x.png";
+        title.textContent = options.title;
+        body.textContent = options.body;
+
+        setTimeout(() => {
+          ipc.send("notify-desired-height", id, document.body.clientHeight);
+        }, 0);
+
+        document.body.addEventListener("click", () => {
+          if (options.clickSend) {
+            Reflect.apply(ipc.send, ipc, options.clickSend);
+          }
+
+          window.close();
+        });
+
+        setTimeout(window.close.bind(window), 3000);
+      })();
+    </script>
+  </body>
+  </html>

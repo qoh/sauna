@@ -25,11 +25,11 @@
   background-color: #8d8;
 }
 
-.user-block.gone {
+.user-block.inactive {
   color: #d99;
   opacity: 0.75;
 }
-.user-block.gone>img {
+.user-block.inactive>img {
   border-color: #d99;
   background-color: #fbb;
 }

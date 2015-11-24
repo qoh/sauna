@@ -38,14 +38,12 @@ function parseOptions(commandLine) {
     .boolean("tray")
     .default("tray", true)
     .describe("tray", "Run in the background and close to tray")
-    .alias("tray", "t")
     .help("h")
     .alias("h", "help")
     .parse(commandLine);
 }
 
 let options = parseOptions(process.argv);
-console.log(options);
 
 if (!options["new-instance"]) {
   let shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {

@@ -5,12 +5,14 @@
 const fs = require("fs");
 const path = require("path");
 const EventEmitter = require("events");
-const SteamUser = require("steam-user");
-const electron = require("electron");
 
+const SteamUser = require("steam-user");
 const Steam = SteamUser.Steam;
+
+const electron = require("electron");
 const app = electron.app;
 const ipc = electron.ipcMain;
+const shell = electron.shell;
 const session = electron.session;
 const Menu = electron.Menu;
 const Tray = electron.Tray;
@@ -22,8 +24,10 @@ global.Steam = Steam;
 class SaunaApp extends EventEmitter {
   constructor(options) {
     super();
+    app.setAppUserModelId("com.sauna.sauna.1");
 
     this.options = options;
+    this.notifications = [];
 
     this.appPath = app.getAppPath();
     this.userPath = app.getPath("userData");
@@ -57,6 +61,8 @@ class SaunaApp extends EventEmitter {
         this.tray.setToolTip("Sauna");
         this.tray.setContextMenu(Menu.buildFromTemplate([
           {label: "Friends", click: () => this.openFriends()},
+          this.getStatusMenuTemplate(),
+          {type: "separator"},
           {label: "Library"},
           {label: "Settings"},
           {type: "separator"},
@@ -182,20 +188,21 @@ class SaunaApp extends EventEmitter {
         this.friendsWindow.webContents.send("personas", {[steamID]: persona});
       }
 
-      if (this.chatWindows.has(steamID)) {
-        this.chatWindows.get(steamID).webContents.send("user", key, persona);
+      if (this.chatWindows.has(key)) {
+        this.chatWindows.get(key).webContents.send("user", key, persona);
       }
     });
 
+    // this.openFriends();
+
     this.user.on("friendsList", list => {
-      console.log("Got friends list");
       this.openFriends();
     });
 
     this.user.on("friendMessage", (steamID, message) => {
       let chat = this.getChatWindow(steamID);
 
-      if (chat.webContents.didFinishLoad) {
+      if (!chat.webContents.isLoading()) {
         chat.webContents.send("message", steamID.toString(), message);
       } else {
         chat.webContents.once("did-finish-load", () => {
@@ -207,7 +214,7 @@ class SaunaApp extends EventEmitter {
     this.user.on("friendMessageEcho", (steamID, message) => {
       let chat = this.getChatWindow(steamID);
 
-      if (chat.webContents.didFinishLoad) {
+      if (!chat.webContents.isLoading()) {
         chat.webContents.send("message", null, message);
       } else {
         chat.webContents.once("did-finish-load", () => {
@@ -223,12 +230,28 @@ class SaunaApp extends EventEmitter {
         return;
       }
 
-      if (chat.webContents.didFinishLoad) {
+      if (!chat.webContents.isLoading()) {
         chat.webContents.send("typing");
       } else {
         chat.webContents.once("did-finish-load", () => {
           chat.webContents.send("typing");
         });
+      }
+    });
+
+    ipc.on("notify", (event, params) => {
+      this.openNotification(params);
+    });
+
+    ipc.on("notify-desired-height", (event, id, height) => {
+      let win = BrowserWindow.fromId(id);
+      win.setSize(win.getSize()[0], height);
+      this.updateNotifications();
+
+      if (!win.webContents.isLoading()) {
+        win.showInactive();
+      } else {
+        win.didSendHeight = true;
       }
     });
 
@@ -255,6 +278,10 @@ class SaunaApp extends EventEmitter {
 
     ipc.on("chat:typing", (event, steamID) => {
       this.user.chatTyping(steamID);
+    });
+
+    ipc.on("request-trade", (event, steamID) => {
+      this.user.trade(steamID);
     });
 
     this.startLogIn(false);
@@ -341,8 +368,14 @@ class SaunaApp extends EventEmitter {
       this.chatWindows.delete(key);
     });
 
+    chatWindow.webContents.on("will-navigate", (event, url) => {
+      if (url !== chatWindow.webContents.getURL()) {
+        shell.openExternal(url);
+        event.preventDefault();
+      }
+    });
+
     chatWindow.webContents.on("did-finish-load", () => {
-      chatWindow.webContents.didFinishLoad = true;
       chatWindow.webContents.send("user",
         key, this.user.users[steamID]);
     });
@@ -388,6 +421,8 @@ class SaunaApp extends EventEmitter {
       {
         label: "Sauna",
         submenu: [
+          this.getStatusMenuTemplate(),
+          {type: "separator"},
           {
             label: "Switch User",
             click: (item, focusedWindow) => {
@@ -416,10 +451,10 @@ class SaunaApp extends EventEmitter {
               .send("view-change", {showOffline: item.checked})
           },
           {
-            label: "Show in Groups", type: "checkbox",
+            label: "Show Inactive Friends", type: "checkbox",
             checked: true, // TODO: load from settings
             click: (item, focusedWindow) => focusedWindow.webContents
-              .send("view-change", {showGroups: item.checked})
+              .send("view-change", {showInactive: item.checked})
           },
           {
             label: "Sort by Status", type: "checkbox",
@@ -487,12 +522,89 @@ class SaunaApp extends EventEmitter {
     if (ungrouped.size > 0) {
       groups.push({
         id: null,
-        name: null,
+        name: "Friends",
         members: Array.from(ungrouped)
       });
     }
 
     return groups;
+  }
+
+  getStatusMenuTemplate() {
+    let statuses = [
+      {label: "Online", value: Steam.EPersonaState.Online},
+      {label: "Offline", value: Steam.EPersonaState.Offline},
+      {},
+      {label: "Busy", value: Steam.EPersonaState.Busy},
+      {label: "Away", value: Steam.EPersonaState.Away},
+      {label: "Snooze", value: Steam.EPersonaState.Snooze},
+      {},
+      {label: "Looking to Play", value: Steam.EPersonaState.LookingToPlay},
+      {label: "Looking to Trade", value: Steam.EPersonaState.LookingToTrade},
+    ];
+
+    return {
+      label: "Status",
+      submenu: statuses.map(entry => entry.label ? {
+        label: entry.label,
+        type: "radio",
+        groupId: 1,
+        click: () => this.user.setPersona(entry.value)
+      } : {
+        type: "separator"
+      })
+    };
+  }
+
+  updateNotifications() {
+    let y = 24;
+
+    for (let i = this.notifications.length - 1; i >= 0; i--) {
+      let note = this.notifications[i];
+      note.setPosition(0, y);
+      y += note.getSize()[1] + 12;
+    }
+  }
+
+  openNotification(options) {
+    let note = new BrowserWindow({
+      width: 275,
+      height: 250,
+      minWidth: 275,
+      minHeight: 1,
+      useContentSize: true,
+      resizable: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      show: false,
+      frame: false,
+      type: "notification"
+    });
+
+    note.on("closed", () => {
+      let index = this.notifications.indexOf(note);
+
+      if (index !== -1) {
+        this.notifications.splice(index, 1);
+        this.updateNotifications();
+      }
+    });
+
+    this.notifications.push(note);
+
+    note.webContents.on("did-finish-load", () => {
+      if (note.didSendHeight) {
+        note.showInactive();
+      }
+    });
+
+    let hash = encodeURIComponent(JSON.stringify({
+      id: note.id,
+      options
+    }));
+
+    note.setMenuBarVisibility(false);
+    note.loadURL(`file://${this.appPath}/static/notification.html#${hash}`);
   }
 }
 

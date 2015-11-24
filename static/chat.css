@@ -9,6 +9,7 @@ header {
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
+  -webkit-user-select: none;
 }
 
 #user_info {
@@ -32,8 +33,32 @@ header {
   overflow-y: scroll;
 }
 
+.message-text div { display: block; }
+.message-text span { display: inline; }
+.message-text p { margin-top: 0; margin-bottom: 16px; }
+.message-text *:last-child { margin-bottom: 0 !important; }
+
+/* === Desktop style messages === */
+/* .message {
+  display: block;
+  margin: 0 4px;
+}
+
+.message-timestamp, .message-sender, .message-text {
+  display: inline;
+}
+
+.message-timestamp { opacity: 0.5; }
+
+.message-self .message-sender { color: #d99; }
+.message-other .message-sender { color: #7ad; }
+
+.message-timestamp::before { content: "("; }
+.message-timestamp::after { content: ") "; }
+.message-sender::after { content: ": "; } */
+
+/* === Mobile style messages === */
 .message {
-  /* margin: 4px 0; */
   margin: 4px;
 }
 .message-other {
@@ -44,7 +69,17 @@ header {
   align-items: flex-end;
   text-align: right;
 }
-.message-content {
+.message-timestamp {
+  font-size: 10px;
+  color: #777;
+  order: 1;
+  -webkit-user-select: none;
+  cursor: default;
+}
+.message-sender {
+  display: none;
+}
+.message-text {
   margin-bottom: 2px;
   padding: 6px;
   border-radius: 4px;
@@ -53,9 +88,8 @@ header {
 .message-echo .message-content {
   background-color: #486868;
 }
-.message-extra {
-  font-size: 10px;
-  color: #777;
+.message-action .message-content {
+  background-color: #684848;
 }
 
 textarea {
