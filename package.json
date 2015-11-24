@@ -26,11 +26,5 @@
     "react": "^0.14.3",
     "react-dom": "^0.14.3",
     "yargs": "^3.30.0"
-  },
-  "devDependencies": {
-    "electron-prebuilt": "^0.35.1"
-  },
-  "peerDependencies": {
-    "steam-user": "^2.0.0"
   }
 }
