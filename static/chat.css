@@ -33,10 +33,14 @@ header {
   overflow-y: scroll;
 }
 
-.message-text div { display: block; }
-.message-text span { display: inline; }
-.message-text p { margin-top: 0; margin-bottom: 16px; }
+.message-text {
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+.message-text *:first-child { margin-top: 0 !important; }
 .message-text *:last-child { margin-bottom: 0 !important; }
+.message-text p { margin-top: 0; margin-bottom: 16px; }
 
 /* === Desktop style messages === */
 /* .message {
@@ -85,10 +89,10 @@ header {
   border-radius: 4px;
   background-color: #484848;
 }
-.message-echo .message-content {
+.message-echo .message-text {
   background-color: #486868;
 }
-.message-action .message-content {
+.message-action .message-text {
   background-color: #684848;
 }
 

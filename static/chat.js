@@ -19,7 +19,8 @@ const user_info = document.getElementById("user_info");
 const user_dropdown = document.getElementById("user_dropdown");
 const new_message = document.getElementById("new_message");
 
-let userSteamID, userPersona;
+const userSteamID = document.location.hash.substr(1);
+let userPersona;
 
 const renderer = new marked.Renderer();
 
@@ -141,15 +142,18 @@ window.addEventListener("focus", () => {
 });
 
 ipc.on("user", (event, steamID, persona) => {
-  userSteamID = steamID;
+  if (steamID !== userSteamID) {
+    console.log("ignoring persona for", steamID);
+    return;
+  }
+
   userPersona = persona;
 
   document.title = `${persona.player_name} - Chat`;
 
-  ReactDOM.render(React.createElement(UserBlock, {
-    steamID: steamID,
-    persona: persona
-  }), user_container);
+  ReactDOM.render(
+    React.createElement(UserBlock, {steamID, persona}),
+    user_container);
 });
 
 let typingTimeout;

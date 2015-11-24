@@ -360,7 +360,7 @@ class SaunaApp extends EventEmitter {
 
     this.chatWindows.set(key, chatWindow);
 
-    chatWindow.loadURL(`file://${this.appPath}/static/chat.html`);
+    chatWindow.loadURL(`file://${this.appPath}/static/chat.html#${key}`);
     chatWindow.setMenuBarVisibility(false);
     chatWindow.showInactive();
 
