@@ -96,7 +96,7 @@ class Message extends React.Component {
 
     return React.DOM.div({className: className},
       React.DOM.div({className: "message-timestamp"}, timestamp),
-      React.DOM.div({className: "message-sender"}, this.props.sender),
+      React.DOM.div({className: "message-sender"}, this.props.senderName),
       React.DOM.div({
         className: "message-text",
         dangerouslySetInnerHTML: {__html: html}
@@ -127,12 +127,12 @@ function addMessage(options) {
       let sound = new Audio("sounds/chime_bell_ding.wav");
       sound.play();
 
-      ipc.send("notify", {
-        title: `${userPersona.player_name} said`,
-        body: options.text,
-        image: userPersona.avatar_url_full,
-        clickSend: ["friends:chat", userSteamID]
-      });
+      // ipc.send("notify", {
+      //   title: `${userPersona.player_name} said`,
+      //   body: options.text,
+      //   image: userPersona.avatar_url_full,
+      //   clickSend: ["friends:chat", userSteamID]
+      // });
     } else {
       let sound = new Audio("sounds/digi_plink.wav");
       sound.play();
@@ -161,16 +161,21 @@ ipc.on("user", (event, steamID, persona) => {
 
 let typingTimeout;
 
-ipc.on("message", (event, steamID, text) => {
-  addMessage({
-    isSelf: steamID === null,
-    isEcho: steamID === null,
-    sender: steamID === null ? "wats my name" : userPersona.player_name,
-    text
-  });
+// ipc.on("message", (event, steamID, text) => {
+ipc.on("message", (event, data) => {
+  // addMessage({
+  //   isSelf: steamID === null,
+  //   isEcho: steamID === null,
+  //   sender: steamID === null ? "wats my name" : userPersona.player_name,
+  //   text
+  // });
 
-  user_info.textContent = "";
-  clearTimeout(typingTimeout);
+  addMessage(data);
+
+  if (!message.isSelf) {
+    user_info.textContent = "";
+    clearTimeout(typingTimeout);
+  }
 });
 
 ipc.on("typing", event => {
@@ -181,11 +186,11 @@ ipc.on("typing", event => {
 
 function sendMessage(message) {
   ipc.send("chat:message", userSteamID, message);
-  addMessage({
-    isSelf: true,
-    sender: "wats my name",
-    text: message
-  });
+  // addMessage({
+  //   isSelf: true,
+  //   sender: "wats my name",
+  //   text: message
+  // });
 }
 
 // This should probably be moved somewhere else

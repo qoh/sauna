@@ -3,9 +3,14 @@
   <head>
     <meta charset="utf-8">
     <style>
-      div, body, img {
+      * {
         box-sizing: border-box;
         position: relative;
+      }
+
+      div, body, img {
+        /* box-sizing: border-box;
+        position: relative; */
 
         display: flex;
         flex-direction: column;
@@ -19,6 +24,10 @@
       }
 
       body {
+        border: 2px solid #0a0a0a;
+      }
+
+      body {
         padding: 12px;
         flex-direction: row;
         align-items: flex-start;
@@ -28,7 +37,8 @@
         word-wrap: break-word;
 
         color: #bbb;
-        background-color: #222;
+        /* background-color: #222; */
+        background-color: #262626;
         overflow: hidden;
 
         -webkit-user-select: none;
@@ -76,13 +86,14 @@
         title.textContent = options.title;
         body.textContent = options.body;
 
+        // Consider replacing this with DOMContentLoaded?
         setTimeout(() => {
-          ipc.send("notify-desired-height", id, document.body.clientHeight);
+          ipc.send("notify-desired-height", id, document.body.offsetHeight);
         }, 0);
 
         document.body.addEventListener("click", () => {
           if (options.clickSend) {
-            Reflect.apply(ipc.send, ipc, options.clickSend);
+            ipc.send.apply(ipc, options.clickSend);
           }
 
           window.close();

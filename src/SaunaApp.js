@@ -14,10 +14,10 @@ const app = electron.app;
 const ipc = electron.ipcMain;
 const shell = electron.shell;
 const session = electron.session;
+let electronScreen = null;
 const Menu = electron.Menu;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;
-
 
 // For renderer processes; this takes a while to load
 global.Steam = Steam;
@@ -35,11 +35,11 @@ function sendWhenLoaded(webContents) {
     webContents.once("did-finish-load", () => {
       // webContents.send(...args);
       // Seriously?
-      Reflect.apply(webContents.send, webContents, args);
+      webContents.send.apply(webContents, args);
     });
   } else {
     // webContents.send(...args);
-    Reflect.apply(webContents.send, webContents, args);
+    webContents.send.apply(webContents, args);
   }
 }
 
@@ -47,6 +47,9 @@ class SaunaApp extends EventEmitter {
   constructor(options) {
     super();
     app.setAppUserModelId("com.sauna.sauna.1");
+
+    // Cannot initialize "screen" module before app is ready
+    electronScreen = electron.screen;
 
     this.options = options;
     this.notifications = [];
@@ -190,6 +193,9 @@ class SaunaApp extends EventEmitter {
       // No avatar
       if (hash === "0000000000000000000000000000000000000000") {
         hash = "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb";
+        persona.has_avatar = false;
+      } else {
+        persona.has_avatar = true;
       }
 
       let url_base = `http://cdn.akamai.steamstatic.com/steamcommunity/public/images/avatars/${hash.substr(0, 2)}/${hash}`;
@@ -201,40 +207,30 @@ class SaunaApp extends EventEmitter {
       if (this.user.users[steamID]) {
         let old = this.user.users[steamID];
 
-        if (persona.player_name !== old.player_name &&
-            this.shouldShowNotification(steamID, "name")) {
-          this.openNotification({
+        if (persona.player_name !== old.player_name) {
+          this.notifyEvent("update-name", steamID, {
             title: `${old.player_name} changed their name to`,
-            body: persona.player_name,
-            image: persona.avatar_url_full,
-            sendClick: ["friends:chat", steamID]
+            body: persona.player_name
           });
         }
 
-        if (persona.game_name && persona.game_name !== old.game_name &&
-            this.shouldShowNotification(steamID, "status")) {
-          this.openNotification({
+        if (persona.game_name && persona.game_name !== old.game_name) {
+          this.notifyEvent("update-status", steamID, {
             title: `${persona.player_name} is now playing`,
-            body: persona.game_name,
-            image: persona.avatar_url_full,
-            sendClick: ["friends:chat", steamID]
+            body: persona.game_name
           });
         } else {
           let nowText = personaUtil.getStatusText(persona);
           let oldText = personaUtil.getStatusText(old);
 
-          if (nowText !== oldText &&
-              this.shouldShowNotification(steamID, "status")) {
-            this.openNotification({
+          if (nowText !== oldText) {
+            this.notifyEvent("update-status", steamID, {
               title: `${persona.player_name} is now`,
-              body: nowText,
-              image: persona.avatar_url_full,
-              sendClick: ["friends:chat", steamID]
+              body: nowText
             });
           }
         }
       }
-
 
       let key = steamID.toString();
 
@@ -256,11 +252,18 @@ class SaunaApp extends EventEmitter {
     this.user.on("friendMessage", (steamID, message) => {
       let chat = this.getChatWindow(steamID);
 
-      if (!chat.webContents.isLoading()) {
-        chat.webContents.send("message", steamID.toString(), message);
-      } else {
-        chat.webContents.once("did-finish-load", () => {
-          chat.webContents.send("message", steamID.toString(), message);
+      sendWhenLoaded(chat.webContents, "message", {
+        isSelf: false,
+        isEcho: false,
+        senderID: steamID.toString(),
+        senderName: this.user.users[steamID].player_name,
+        text: message
+      });
+
+      if (!chat.isFocused()) {
+        this.notifyEvent("message", steamID, {
+          title: `${this.user.users[steamID].player_name} said`,
+          body: message
         });
       }
     });
@@ -268,13 +271,13 @@ class SaunaApp extends EventEmitter {
     this.user.on("friendMessageEcho", (steamID, message) => {
       let chat = this.getChatWindow(steamID);
 
-      if (!chat.webContents.isLoading()) {
-        chat.webContents.send("message", null, message);
-      } else {
-        chat.webContents.once("did-finish-load", () => {
-          chat.webContents.send("message", null, message);
-        });
-      }
+      sendWhenLoaded(chat.webContents, "message", {
+        isSelf: true,
+        isEcho: true,
+        senderID: this.user.steamID.toString(),
+        senderName: this.user.users[this.user.steamID].player_name,
+        text: message
+      });
     });
 
     this.user.on("friendTyping", (steamID, message) => {
@@ -328,6 +331,15 @@ class SaunaApp extends EventEmitter {
 
     ipc.on("chat:message", (event, steamID, text) => {
       this.user.chatMessage(steamID, text);
+      let chat = this.getChatWindow(steamID);
+
+      sendWhenLoaded(chat.webContents, "message", {
+        isSelf: true,
+        isEcho: false,
+        senderID: this.user.steamID.toString(),
+        senderName: this.user.users[this.user.steamID].player_name,
+        text
+      });
     });
 
     ipc.on("chat:typing", (event, steamID) => {
@@ -359,7 +371,7 @@ class SaunaApp extends EventEmitter {
 
     const promptLogIn = () => {
       console.log("Failed to read login key, requesting user login");
-      sendWhenLoaded(this.getLoginWindow(), "login");
+      sendWhenLoaded(this.getLoginWindow().webContents, "login");
     };
 
     fs.readFile(path.join(this.userPath, "Login Key"), "utf-8", (err, data) => {
@@ -419,7 +431,8 @@ class SaunaApp extends EventEmitter {
     }
 
     let chatWindow = new BrowserWindow({
-      width: 400, height: 600,
+      width: this.config.get("chat.default-width", 600),
+      height: this.config.get("chat.default-height", 600),
       title: "Chat",
       icon: path.join(this.appPath, "static/icons/icon_32x.png"),
       show: false
@@ -623,30 +636,60 @@ class SaunaApp extends EventEmitter {
     };
   }
 
-  shouldShowNotification(steamID, event) {
-    const groupID = "null";
+  notifyEvent(event, steamID, props) {
+    // console.log("notifyEvent", event, steamID);
 
-    let perUser  = this.config.get(`notifications.user.${steamID}.${event}`);
-    let perGroup = this.config.get(`notifications.group.${groupID}.${event}`);
+    const groupID = null; // ???
 
-    if (perUser !== undefined) {
-      return !!perUser;
+    let cfgUser = this.config.get(`notifications.user.${steamID}.${event}`, {});
+    let cfgGroup = this.config.get(`notifications.group.${groupID}.${event}`, {});
+    let cfgAll = this.config.get(`notifications.all.${event}`, {});
+
+    let visual = cfgUser.visual !== undefined ? cfgUser.visual : (
+      cfgGroup.visual !== undefined ? cfgGroup.visual : (
+        cfgAll.visual !== undefined ? cfgAll.visual : true
+      ));
+
+    // let sound = cfgUser.sound !== undefined ? cfgUser.sound : (
+    //   cfgGroup.sound !== undefined ? cfgGroup.sound : (
+    //     cfgAll.sound !== undefined ? cfgAll.sound : true
+    //   ));
+    //
+    // if (sound === true) {
+    //   sound = `file://${this.appPath}/static/sounds/chime_bell_ding.wav`;
+    // } else if (sound === false) {
+    //   sound = null;
+    // }
+
+    if (visual) {
+      this.openNotification({
+        title: props.title,
+        body: props.body,
+        image: this.user.users[steamID].avatar_url_full,
+        clickSend: ["friends:chat", steamID.toString()]
+      });
     }
-
-    if (perGroup !== undefined) {
-      return !!perUser;
-    }
-
-    return !!this.config.get(`notifications.all.${event}`, true);
   }
 
   updateNotifications() {
-    let y = 24;
+    let screenSize = electronScreen.getPrimaryDisplay().workAreaSize;
+
+    let mulX = Number(this.config.get("notifications.orient-x", false));
+    let mulY = Number(this.config.get("notifications.orient-y", false));
+    let baseX = this.config.get("notifications.base-x", 0);
+    let baseY = this.config.get("notifications.base-y", 24);
+    let signX = mulX ? -1 : 1;
+    let signY = mulY ? -1 : 1;
+    let spacing = this.config.get("notifications.spacing", 12);
+
+    let x = screenSize.width * mulX + baseX * signX;
+    let y = screenSize.height * mulY + baseY * signY;
 
     for (let i = this.notifications.length - 1; i >= 0; i--) {
       let note = this.notifications[i];
-      note.setPosition(0, y);
-      y += note.getSize()[1] + 12;
+      let noteSize = note.getSize();
+      note.setPosition(x - noteSize[0] * mulX, y - noteSize[1] * mulY);
+      y += (noteSize[1] + spacing) * signY;
     }
   }
 
