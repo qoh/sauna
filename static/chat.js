@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", event => {
   oldWindowHeight = window.innerHeight;
 });
 
-// Maintain scorll position relative to bottom of scroll region
+// Maintain scroll position relative to bottom of scroll region
 window.addEventListener("resize", (event) => {
   let oldHeight = oldWindowHeight;
   let newHeight = window.innerHeight;
