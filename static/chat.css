@@ -91,7 +91,7 @@ header {
   border-radius: 4px;
   background-color: #484848;
   display: inline-block;
-  word-break: break-all;
+  word-break: break-word;
 }
 .message-echo .message-text {
   background-color: #486868;
