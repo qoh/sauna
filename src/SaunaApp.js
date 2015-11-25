@@ -62,7 +62,7 @@ class SaunaApp extends EventEmitter {
     this.getLoginWindow().show();
 
     this.config = new ConfigStore(this.userPath);
-    
+
     this.user = new SteamUser(null, {
       dataDirectory: this.userPath,
       promptSteamGuardCode: false,
@@ -201,7 +201,8 @@ class SaunaApp extends EventEmitter {
       if (this.user.users[steamID]) {
         let old = this.user.users[steamID];
 
-        if (persona.player_name !== old.player_name) {
+        if (persona.player_name !== old.player_name &&
+            this.shouldShowNotification(steamID, "name")) {
           this.openNotification({
             title: `${old.player_name} changed their name to`,
             body: persona.player_name,
@@ -210,7 +211,8 @@ class SaunaApp extends EventEmitter {
           });
         }
 
-        if (persona.game_name && persona.game_name !== old.game_name) {
+        if (persona.game_name && persona.game_name !== old.game_name &&
+            this.shouldShowNotification(steamID, "status")) {
           this.openNotification({
             title: `${persona.player_name} is now playing`,
             body: persona.game_name,
@@ -221,7 +223,8 @@ class SaunaApp extends EventEmitter {
           let nowText = personaUtil.getStatusText(persona);
           let oldText = personaUtil.getStatusText(old);
 
-          if (nowText !== oldText) {
+          if (nowText !== oldText &&
+              this.shouldShowNotification(steamID, "status")) {
             this.openNotification({
               title: `${persona.player_name} is now`,
               body: nowText,
@@ -618,6 +621,23 @@ class SaunaApp extends EventEmitter {
         type: "separator"
       })
     };
+  }
+
+  shouldShowNotification(steamID, event) {
+    const groupID = "null";
+
+    let perUser  = this.config.get(`notifications.user.${steamID}.${event}`);
+    let perGroup = this.config.get(`notifications.group.${groupID}.${event}`);
+
+    if (perUser !== undefined) {
+      return !!perUser;
+    }
+
+    if (perGroup !== undefined) {
+      return !!perUser;
+    }
+
+    return !!this.config.get(`notifications.all.${event}`, true);
   }
 
   updateNotifications() {

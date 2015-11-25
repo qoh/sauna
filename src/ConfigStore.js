@@ -17,6 +17,8 @@ function deepClone(value) {
     for (let key of Object.keys(value)) {
       clone[key] = deepClone(value[key]);
     }
+
+    return clone;
   } else {
     return value;
   }
@@ -68,7 +70,7 @@ class ConfigStore {
     // I was originally writing this as async, but that could cause problems
     // with multiple fs.writeFile calls going on at the same time.
 
-    let data = JSON.stringify(this.data);
+    let data = JSON.stringify(this.data, null, "\t");
 
     try {
       fs.writeFileSync(this.filename, data);
