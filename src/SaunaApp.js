@@ -21,6 +21,24 @@ const BrowserWindow = electron.BrowserWindow;
 // For renderer processes; this takes a while to load
 global.Steam = Steam;
 
+// This also definitely shouldn't be here.
+// function sendWhenLoaded(webContents, ...args) {
+// Why does Node.js not have ...args yet?
+function sendWhenLoaded(webContents) {
+  const args = Array.from(arguments).slice(1);
+
+  if (webContents.isLoading()) {
+    webContents.once("did-finish-load", () => {
+      // webContents.send(...args);
+      // Seriously?
+      Reflect.apply(webContents.send, webContents, args);
+    });
+  } else {
+    // webContents.send(...args);
+    Reflect.apply(webContents.send, webContents, args);
+  }
+}
+
 class SaunaApp extends EventEmitter {
   constructor(options) {
     super();
@@ -40,6 +58,9 @@ class SaunaApp extends EventEmitter {
       dataDirectory: this.userPath,
       promptSteamGuardCode: false,
     });
+
+    // Immediately let the user know that we're trying our best.
+    this.getLoginWindow().show();
 
     app.on("window-all-closed", () => {
       if (!this.tray && !this.switchingUser) {
@@ -75,26 +96,15 @@ class SaunaApp extends EventEmitter {
       }
 
       this.user.setPersona(Steam.EPersonaState.Online);
-      console.log("Online");
     });
 
     this.user.on("steamGuard", (domain, callback) => {
-      if (!this.loginWindow) {
-        throw new Error("steamGuard without loginWindow");
-      }
-
       this.loginSentryCallback = callback;
-      this.loginWindow.webContents.send("sentry", domain);
+      this.getLoginWindow().webContents.send("sentry", domain);
     });
 
     this.user.on("error", error => {
-      console.log("error", error);
-
-      if (!this.loginWindow) {
-        throw error;
-      }
-
-      this.loginWindow.webContents.send("error", error.eresult, error.message);
+      this.getLoginWindow().webContents.send("error", error.eresult, error.message);
     });
 
     this.user.on("disconnected", eresult => {
@@ -289,7 +299,7 @@ class SaunaApp extends EventEmitter {
 
   startLogIn(ignoreKey) {
     const autoLogIn = data => {
-      console.log("Using login key");
+      console.log("Using login key for", data.accountName);
 
       this.user.logOn({
         accountName: data.accountName,
@@ -300,27 +310,7 @@ class SaunaApp extends EventEmitter {
 
     const promptLogIn = () => {
       console.log("Failed to read login key, requesting user login");
-
-      // We don't have a valid login key, so let's ask the user to login.
-      this.loginWindow = new BrowserWindow({
-        width: /* 360 */ 400,
-        height: 400,
-        resizable: false,
-        useContentSize: true,
-        title: "Login",
-        icon: path.join(this.appPath, "static/icons/icon_32x.png")
-      });
-
-      this.loginWindow.on("closed", () => {
-        this.loginWindow = null;
-
-        if (this.user.steamID === null && !this.switchingUser) {
-          app.quit();
-        }
-      });
-
-      this.loginWindow.loadURL(`file://${this.appPath}/static/login.html`);
-      this.loginWindow.setMenuBarVisibility(false);
+      sendWhenLoaded(this.getLoginWindow(), "login");
     };
 
     fs.readFile(path.join(this.userPath, "Login Key"), "utf-8", (err, data) => {
@@ -338,6 +328,34 @@ class SaunaApp extends EventEmitter {
         autoLogIn(data);
       }
     });
+  }
+
+  getLoginWindow() {
+    if (this.loginWindow) {
+      return this.loginWindow;
+    }
+
+    this.loginWindow = new BrowserWindow({
+      width: /* 360 */ 400,
+      height: 400,
+      resizable: false,
+      useContentSize: true,
+      title: "Sauna",
+      icon: path.join(this.appPath, "static/icons/icon_32x.png")
+    });
+
+    this.loginWindow.on("closed", () => {
+      this.loginWindow = null;
+
+      if (this.user.steamID === null && !this.switchingUser) {
+        app.quit();
+      }
+    });
+
+    this.loginWindow.loadURL(`file://${this.appPath}/static/login.html`);
+    this.loginWindow.setMenuBarVisibility(false);
+
+    return this.loginWindow;
   }
 
   getChatWindow(steamID, noCreate) {
