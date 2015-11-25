@@ -21,6 +21,8 @@ const BrowserWindow = electron.BrowserWindow;
 // For renderer processes; this takes a while to load
 global.Steam = Steam;
 
+const personaUtil = require("./persona-util.js");
+
 // This also definitely shouldn't be here.
 // function sendWhenLoaded(webContents, ...args) {
 // Why does Node.js not have ...args yet?
@@ -192,6 +194,41 @@ class SaunaApp extends EventEmitter {
       persona.avatar_url_medium = url_base + "_medium.jpg";
       persona.avatar_url_small = url_base + ".jpg";
 
+      if (this.user.users[steamID]) {
+        let old = this.user.users[steamID];
+
+        if (persona.player_name !== old.player_name) {
+          this.openNotification({
+            title: `${old.player_name} changed their name to`,
+            body: persona.player_name,
+            image: persona.avatar_url_full,
+            sendClick: ["friends:chat", steamID]
+          });
+        }
+
+        if (persona.game_name && persona.game_name !== old.game_name) {
+          this.openNotification({
+            title: `${persona.player_name} is now playing`,
+            body: persona.game_name,
+            image: persona.avatar_url_full,
+            sendClick: ["friends:chat", steamID]
+          });
+        } else {
+          let nowText = personaUtil.getStatusText(persona);
+          let oldText = personaUtil.getStatusText(old);
+
+          if (nowText !== oldText) {
+            this.openNotification({
+              title: `${persona.player_name} is now`,
+              body: nowText,
+              image: persona.avatar_url_full,
+              sendClick: ["friends:chat", steamID]
+            });
+          }
+        }
+      }
+
+
       let key = steamID.toString();
 
       if (this.friendsWindow) {
@@ -295,6 +332,11 @@ class SaunaApp extends EventEmitter {
     });
 
     this.startLogIn(false);
+  }
+
+  receiveOptions(newOptions, workingDirectory) {
+    console.log("Got options from new process");
+    console.log(newOptions);
   }
 
   startLogIn(ignoreKey) {

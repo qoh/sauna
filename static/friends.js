@@ -9,7 +9,7 @@ const ReactDOM = require("react-dom");
 const electron = require("electron");
 const ipc = electron.ipcRenderer;
 const UserBlock = require("../src/client/UserBlock.js");
-const personaUtil = require("../src/client/persona-util.js");
+const personaUtil = require("../src/persona-util.js");
 
 class FriendGroup extends React.Component {
   render() {
@@ -71,62 +71,6 @@ class FriendList extends React.Component {
   }
 
   onPersonas(event, patch) {
-    function notify(steamID, title, body) {
-      ipc.send("notify", {
-        title,
-        body,
-        clickSend: ["friends:chat", steamID]
-      });
-
-      // let note = new Notification(title, {
-      //   body,
-      //   silent: false,
-      //   icon: "icons/icon_32x.png",
-      //   sound: "sounds/chime_bell_ding.wav"
-      // });
-      //
-      // if (steamID) {
-      //   note.onclick = () => ipc.send("friends:chat", steamID);
-      // }
-    }
-
-    for (let steamID of Object.keys(patch)) {
-      let now = patch[steamID];
-      let old = this.state.personas[steamID];
-
-      if (old) {
-        if (now.player_name !== old.player_name) {
-          ipc.send("notify", {
-            title: `${old.player_name} changed their name to`,
-            body: now.player_name,
-            image: now.avatar_url_full,
-            sendClick: ["friends:chat", steamID]
-          });
-        }
-
-        if (now.game_name && now.game_name !== old.game_name) {
-          ipc.send("notify", {
-            title: `${now.player_name} is now playing`,
-            body: now.game_name,
-            image: now.avatar_url_full,
-            sendClick: ["friends:chat", steamID]
-          });
-        } else {
-          let nowText = personaUtil.getStatusText(now);
-          let oldText = personaUtil.getStatusText(old);
-
-          if (nowText !== oldText) {
-            ipc.send("notify", {
-              title: `${now.player_name} is now`,
-              body: nowText,
-              image: now.avatar_url_full,
-              sendClick: ["friends:chat", steamID]
-            });
-          }
-        }
-      }
-    }
-
     this.setState({
       personas: Object.assign({}, this.state.personas, patch)
     });

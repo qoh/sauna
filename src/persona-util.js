@@ -2,14 +2,18 @@
 /*jshint esnext: true */
 "use strict";
 
-// Cache these because they're IPC-accessed
-const EPersonaState = {};
-{
+let EPersonaState;
+
+if (process.type === "renderer") {
   const Steam = require("electron").remote.getGlobal("Steam");
+  // Cache these because they're IPC-accessed
+  EPersonaState = {};
 
   for (let key of Object.keys(Steam.EPersonaState)) {
     EPersonaState[key] = Steam.EPersonaState[key];
   }
+} else {
+  EPersonaState = global.Steam.EPersonaState;
 }
 
 const setOffline = new Set([

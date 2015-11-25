@@ -22,6 +22,9 @@ const new_message = document.getElementById("new_message");
 const userSteamID = document.location.hash.substr(1);
 let userPersona;
 
+let selfTypingState = false;
+let selfTypingTimeout;
+
 const renderer = new marked.Renderer();
 
 // renderer.paragraph = text => {
@@ -193,13 +196,25 @@ new_message.addEventListener("keydown", (event) => {
       // TODO: add at cursor
       new_message.value += "\n";
     } else {
-      if(new_message.value.trim().length > 0) {
+      if (new_message.value.trim().length > 0) {
+        if (selfTypingState) {
+          selfTypingState = false;
+          clearTimeout(selfTypingState);
+        }
+        
         sendMessage(new_message.value);
         new_message.value = "";
       }
+
+      return;
     }
-  } else {
+  }
+
+  if (!selfTypingState) {
     ipc.send("chat:typing", userSteamID);
+
+    selfTypingState = true;
+    selfTypingTimeout = setTimeout(() => selfTypingState = false, 15000);
   }
 });
 
