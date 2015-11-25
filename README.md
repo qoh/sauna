@@ -8,7 +8,7 @@
 
 ```sh
 npm install
-npm install steam-user --no-bin-links
+npm install steam-user
 npm install steam
 cd node_modules/steam
 npm install steam-resources
@@ -16,6 +16,8 @@ cd node_modules/steam-resources
 npm install
 cd ../../../..
 ```
+
+On Windows, you may need to add `--no-bin-links` to `npm install steam-user` and `npm install steam-resources`.
 
 To run `sauna` from source, you need to have the `electron` binary. Install `electron-prebuilt` globally, then run it:
 
