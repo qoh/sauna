@@ -188,20 +188,39 @@ function sendMessage(message) {
   });
 }
 
+// This should probably be moved somewhere else
+function insertText(elem, text) {
+  let scroll = elem.scrollTop;
+  let end = elem.selectionStart + text.length;
+
+  let head = elem.value.substring(0, elem.selectionStart);
+  let tail = elem.value.substring(elem.selectionEnd, elem.value.length);
+
+  elem.value = head + text + tail;
+  elem.focus();
+  elem.setSelectionRange(end, end);
+
+  // Scrolling to cursor isn't working.
+  // Workaround: Scroll to the bottom if cursor is at bottom.
+  // Covers most cases of inserting a character.
+  if (elem.selectionEnd === elem.value.length) {
+    elem.scrollTop = elem.scrollHeight;
+  }
+}
+
 new_message.addEventListener("keydown", (event) => {
   if (event.keyCode == 13) {
     event.preventDefault();
 
     if (event.ctrlKey) {
-      // TODO: add at cursor
-      new_message.value += "\n";
+      insertText(new_message, "\n");
     } else {
       if (new_message.value.trim().length > 0) {
         if (selfTypingState) {
           selfTypingState = false;
           clearTimeout(selfTypingState);
         }
-        
+
         sendMessage(new_message.value);
         new_message.value = "";
       }
@@ -221,4 +240,33 @@ new_message.addEventListener("keydown", (event) => {
 user_dropdown.addEventListener("click", (event) => {
   event.preventDefault();
   ipc.send("request-trade", userSteamID);
+});
+
+// This hack is necessary because the window.resize event happens after the
+// resize and does not provide any access to the old size.
+let oldWindowHeight;
+
+document.addEventListener("DOMContentLoaded", event => {
+  oldWindowHeight = window.innerHeight;
+});
+
+// Stick to bottom of messages whenever window height decreases
+window.addEventListener("resize", (event) => {
+  let oldHeight = oldWindowHeight;
+  let newHeight = window.innerHeight;
+  oldWindowHeight = newHeight;
+
+  if (newHeight > oldHeight) {
+    // This only matters when the height decreases
+    return;
+  }
+
+  let deltaHeight = oldHeight - newHeight;
+  let deltaScroll = messages.scrollHeight - messages.clientHeight - messages.scrollTop;
+
+  // Scroll to the bottom if we could reasonably have been at it
+  // (before the resize)
+  if (deltaScroll <= deltaHeight) {
+    messages.scrollTop = messages.scrollHeight;
+  }
 });
