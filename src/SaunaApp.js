@@ -175,7 +175,7 @@ class SaunaApp extends EventEmitter {
         width: 1000,
         height: 800,
         title: "Trade",
-        icon: path.join(this.appPath, "static/icons/icon_32x.png"),
+        icon: path.join(this.appPath, "static/icons/icon_64x.png"),
         webPreferences: {
           nodeIntegration: false,
           partition: "persist:steamweb",
@@ -402,7 +402,7 @@ class SaunaApp extends EventEmitter {
       resizable: false,
       useContentSize: true,
       title: "Sauna",
-      icon: path.join(this.appPath, "static/icons/icon_32x.png")
+      icon: path.join(this.appPath, "static/icons/icon_64x.png")
     });
 
     this.loginWindow.on("closed", () => {
@@ -434,7 +434,7 @@ class SaunaApp extends EventEmitter {
       width: this.config.get("chat.default-width", 600),
       height: this.config.get("chat.default-height", 600),
       title: "Chat",
-      icon: path.join(this.appPath, "static/icons/icon_32x.png"),
+      icon: path.join(this.appPath, "static/icons/icon_64x.png"),
       show: false
     });
 
@@ -473,7 +473,7 @@ class SaunaApp extends EventEmitter {
       width: 300, height: 600,
       show: false,
       title: "Friends",
-      icon: path.join(this.appPath, "static/icons/icon_32x.png")
+      icon: path.join(this.appPath, "static/icons/icon_64x.png")
     });
 
     this.friendsWindow.on("closed", () => {
