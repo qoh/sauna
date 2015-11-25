@@ -176,6 +176,15 @@ ipc.on("typing", event => {
   user_info.textContent = "Friend is typing a message...";
 });
 
+function sendMessage(message) {
+  ipc.send("chat:message", userSteamID, message);
+  addMessage({
+    isSelf: true,
+    sender: "wats my name",
+    text: message
+  });
+}
+
 new_message.addEventListener("keydown", (event) => {
   if (event.keyCode == 13) {
     event.preventDefault();
@@ -185,13 +194,7 @@ new_message.addEventListener("keydown", (event) => {
       new_message.value += "\n";
     } else {
       if(new_message.value.trim().length > 0) {
-        ipc.send("chat:message", userSteamID, new_message.value);
-        addMessage({
-          isSelf: true,
-          sender: "wats my name",
-          text: new_message.value
-        });
-
+        sendMessage(new_message.value);
         new_message.value = "";
       }
     }
