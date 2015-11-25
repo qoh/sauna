@@ -8,7 +8,7 @@ const ReactDOM = require("react-dom");
 const electron = require("electron");
 const remote = electron.remote;
 const Steam = remote.getGlobal("Steam");
-const personaUtil = require("./persona-util.js");
+const personaUtil = require("../persona-util.js");
 // Please give destructuring already
 const getStatusClass = personaUtil.getStatusClass;
 const getStatusText = personaUtil.getStatusText;
