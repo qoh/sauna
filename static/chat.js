@@ -173,7 +173,7 @@ ipc.on("message", (event, steamID, text) => {
 ipc.on("typing", event => {
   clearTimeout(typingTimeout);
   setTimeout(() => user_info.textContent = "", 15000);
-  user_info.textContent = "Friend is typing a message...";
+  user_info.textContent = `${userPersona.player_name} is typing a message...`;
 });
 
 function sendMessage(message) {
