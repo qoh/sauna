@@ -72,7 +72,7 @@ header {
 }
 .message-self {
   align-items: flex-end;
-  text-align: right;
+  text-align: /* right */ left;
   margin-left: 40px;
 }
 .message-timestamp {
