@@ -184,14 +184,16 @@ new_message.addEventListener("keydown", (event) => {
       // TODO: add at cursor
       new_message.value += "\n";
     } else {
-      ipc.send("chat:message", userSteamID, new_message.value);
-      addMessage({
-        isSelf: true,
-        sender: "wats my name",
-        text: new_message.value
-      });
+      if(new_message.value.trim().length > 0) {
+        ipc.send("chat:message", userSteamID, new_message.value);
+        addMessage({
+          isSelf: true,
+          sender: "wats my name",
+          text: new_message.value
+        });
 
-      new_message.value = "";
+        new_message.value = "";
+      }
     }
   } else {
     ipc.send("chat:typing", userSteamID);
