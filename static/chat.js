@@ -250,23 +250,21 @@ document.addEventListener("DOMContentLoaded", event => {
   oldWindowHeight = window.innerHeight;
 });
 
-// Stick to bottom of messages whenever window height decreases
+// Maintain scorll position relative to bottom of scroll region
 window.addEventListener("resize", (event) => {
   let oldHeight = oldWindowHeight;
   let newHeight = window.innerHeight;
   oldWindowHeight = newHeight;
 
-  if (newHeight > oldHeight) {
-    // This only matters when the height decreases
-    return;
-  }
-
   let deltaHeight = oldHeight - newHeight;
   let deltaScroll = messages.scrollHeight - messages.clientHeight - messages.scrollTop;
 
-  // Scroll to the bottom if we could reasonably have been at it
-  // (before the resize)
-  if (deltaScroll <= deltaHeight) {
-    messages.scrollTop = messages.scrollHeight;
+  // Trying to stick to the bottom when the window size increases seems to
+  // cause a miniscule offset. Just don't do anything when it increases and
+  // at the bottom. Same behavior regardless.
+  if (deltaHeight < 0 && deltaScroll == 0) {
+    return;
   }
+
+  messages.scrollTop += deltaHeight;
 });
