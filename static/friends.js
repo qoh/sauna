@@ -41,8 +41,7 @@ class FriendList extends React.Component {
       personas: {},
       groups: [],
 
-      showOffline: true,
-      showInactive: true,
+      filterLevel: 0,
       sortStatus: true,
       showSearch: true,
       search: "",
@@ -95,8 +94,8 @@ class FriendList extends React.Component {
     let persona = entry.persona;
 
     return persona &&
-      (this.state.showOffline || !personaUtil.setOffline.has(persona.persona_state)) &&
-      (this.state.showInactive || !personaUtil.setInactive.has(persona.persona_state) || persona.game_name) &&
+      (this.state.filterLevel < 1 || !personaUtil.setOffline.has(persona.persona_state)) &&
+      (this.state.filterLevel < 2 || !personaUtil.setInactive.has(persona.persona_state) || persona.game_name) &&
       (this.state.search === "" || persona.player_name.toLowerCase().indexOf(this.state.search.toLowerCase()) != -1);
   }
 

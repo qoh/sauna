@@ -65,6 +65,8 @@ class SaunaApp extends EventEmitter {
     this.getLoginWindow().show();
 
     this.config = new ConfigStore(this.userPath);
+    this.desiredStatus = this.config.get("general.startup-status",
+      Steam.EPersonaState.Online);
 
     this.user = new SteamUser(null, {
       dataDirectory: this.userPath,
@@ -104,7 +106,7 @@ class SaunaApp extends EventEmitter {
         this.loginWindow.close();
       }
 
-      this.user.setPersona(Steam.EPersonaState.Online);
+      this.user.setPersona(this.desiredStatus);
     });
 
     this.user.on("steamGuard", (domain, callback) => {
@@ -481,6 +483,12 @@ class SaunaApp extends EventEmitter {
     });
 
     this.friendsWindow.webContents.on("did-finish-load", () => {
+      this.friendsWindow.webContents.send("view-change", {
+        filterLevel: this.config.get("friends.filter-level", 0),
+        sortStatus: this.config.get("friends.sort-status", true),
+        showSearch: this.config.get("friends.show-search", true)
+      });
+
       this.friendsWindow.webContents.send("personas", this.user.users);
 
       let missingPersonas =
@@ -496,6 +504,8 @@ class SaunaApp extends EventEmitter {
       this.friendsWindow.webContents.send("groups", this.buildFriendGroupList());
       this.friendsWindow.webContents.send("friends", this.user.myFriends);
     });
+
+    let filterLevel = this.config.get("friends.filter-level", 0);
 
     this.friendsWindow.setMenu(Menu.buildFromTemplate([
       {
@@ -524,29 +534,49 @@ class SaunaApp extends EventEmitter {
       {
         label: "View",
         submenu: [
+          // FIXME: Ew.
+          // This should really be using config.observe and the like!
           {
-            label: "Show Offline Friends", type: "checkbox",
-            checked: true, // TODO: load from settings
-            click: (item, focusedWindow) => focusedWindow.webContents
-              .send("view-change", {showOffline: item.checked})
+            label: "Show All", type: "radio",
+            checked: filterLevel === 0,
+            click: (item, focusedWindow) => {
+              focusedWindow.webContents.send("view-change", {filterLevel: 0});
+              this.config.set("friends.filter-level", 0);
+            }
           },
           {
-            label: "Show Inactive Friends", type: "checkbox",
-            checked: true, // TODO: load from settings
-            click: (item, focusedWindow) => focusedWindow.webContents
-              .send("view-change", {showInactive: item.checked})
+            label: "Hide Offline", type: "radio",
+            checked: filterLevel === 1,
+            click: (item, focusedWindow) => {
+              focusedWindow.webContents.send("view-change", {filterLevel: 1});
+              this.config.set("friends.filter-level", 1);
+            }
           },
+          {
+            label: "Hide Offline && Inactive", type: "radio",
+            checked: filterLevel === 2,
+            click: (item, focusedWindow) => {
+              focusedWindow.webContents.send("view-change", {filterLevel: 2});
+              this.config.set("friends.filter-level", 2);
+            }
+          },
+          {type: "separator"},
+          // More? Oh no. Seriously, please. Observe the config!
           {
             label: "Sort by Status", type: "checkbox",
-            checked: true, // TODO: load from settings
-            click: (item, focusedWindow) => focusedWindow.webContents
-              .send("view-change", {sortStatus: item.checked})
+            checked: this.config.get("friends.sort-status", true),
+            click: (item, focusedWindow) => {
+              focusedWindow.webContents.send("view-change", {sortStatus: item.checked});
+              this.config.set("friends.sort-status", item.checked);
+            }
           },
           {
             label: "Show Search Box", type: "checkbox",
-            checked: true, // TODO: load from settings
-            click: (item, focusedWindow) => focusedWindow.webContents
-              .send("view-change", {showSearch: item.checked, search: ""})
+            checked: this.config.get("friends.show-search", true),
+            click: (item, focusedWindow) => {
+              focusedWindow.webContents.send("view-change", {showSearch: item.checked});
+              this.config.set("friends.show-search", item.checked);
+            }
           }
         ]
       },
@@ -629,7 +659,10 @@ class SaunaApp extends EventEmitter {
         label: entry.label,
         type: "radio",
         groupId: 1,
-        click: () => this.user.setPersona(entry.value)
+        click: () => {
+          this.user.setPersona(entry.value);
+          this.desiredStatus = entry.value;
+        }
       } : {
         type: "separator"
       })

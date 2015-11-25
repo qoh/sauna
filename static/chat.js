@@ -172,7 +172,7 @@ ipc.on("message", (event, data) => {
 
   addMessage(data);
 
-  if (!message.isSelf) {
+  if (!data.isSelf) {
     user_info.textContent = "";
     clearTimeout(typingTimeout);
   }
