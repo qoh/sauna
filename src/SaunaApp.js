@@ -352,7 +352,7 @@ class SaunaApp extends EventEmitter {
     }
 
     let chatWindow = new BrowserWindow({
-      width: 800, height: 600,
+      width: 400, height: 600,
       title: "Chat",
       icon: path.join(this.appPath, "static/icons/icon_32x.png"),
       show: false
