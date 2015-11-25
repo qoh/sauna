@@ -49,8 +49,8 @@ if (!options["new-instance"]) {
   let shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
     let newOptions = parseOptions(commandLine);
 
-    if (global.saunaApp) {
-      global.saunaApp.receiveOptions(newOptions, workingDirectory);
+    if (global.sauna) {
+      global.sauna.receiveOptions(newOptions, workingDirectory);
     }
 
     return true;
@@ -81,5 +81,5 @@ app.on("ready", () => {
 
   // Create an instance of the singleton app, which will take things from here
   const app = new SaunaApp(options);
-  global.saunaApp = app;
+  global.sauna = app;
 });

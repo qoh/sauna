@@ -18,9 +18,11 @@ const Menu = electron.Menu;
 const Tray = electron.Tray;
 const BrowserWindow = electron.BrowserWindow;
 
+
 // For renderer processes; this takes a while to load
 global.Steam = Steam;
 
+const ConfigStore = require("./ConfigStore.js");
 const personaUtil = require("./persona-util.js");
 
 // This also definitely shouldn't be here.
@@ -56,13 +58,15 @@ class SaunaApp extends EventEmitter {
     this.friendsWindow = null;
     this.chatWindows = new Map();
 
+    // Immediately let the user know that we're trying our best.
+    this.getLoginWindow().show();
+
+    this.config = new ConfigStore(this.userPath);
+    
     this.user = new SteamUser(null, {
       dataDirectory: this.userPath,
       promptSteamGuardCode: false,
     });
-
-    // Immediately let the user know that we're trying our best.
-    this.getLoginWindow().show();
 
     app.on("window-all-closed", () => {
       if (!this.tray && !this.switchingUser) {
