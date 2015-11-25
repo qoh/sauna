@@ -4,11 +4,11 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="css/shared.css">
     <link rel="stylesheet" href="css/theme-dark.css">
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="login.css">
   </head>
   <body tabindex="-1">
     <div id="container">
-      <div id="section_wait" class="section disabled">
+      <div id="section-wait" class="section">
         <div class="sk-folding-cube">
           <div class="sk-cube1 sk-cube"></div>
           <div class="sk-cube2 sk-cube"></div>
@@ -16,7 +16,8 @@
           <div class="sk-cube3 sk-cube"></div>
         </div>
       </div>
-      <form id="section_main" class="section disabled">
+
+      <form id="section-login" class="section disabled">
         <p style="display: none" id="error_text"></p>
         <label for="input_username">Username</label>
         <input type="text" id="input_username" autofocus>
@@ -28,9 +29,10 @@
         </div>
         <button type="submit">Log In</button>
       </form>
-      <form id="section_sentry" class="section disabled">
+
+      <form id="section-sentry" class="section disabled">
         <div style="text-align: center; margin-bottom: 16px" id="sentry_source"></div>
-        <input type="text" placeholder="Steam Guard code" id="input_sentry">
+        <input type="text" minlength="5" maxlength="5" pattern="[A-Za-z0-9]{5}" id="input_sentry">
         <button type="submit">Log In</button>
       </form>
     </div>

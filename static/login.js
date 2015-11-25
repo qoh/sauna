@@ -15,9 +15,25 @@ const FailMessage = {
   [Steam.EResult.ServiceUnavailable]: "Steam service is unavailable"
 };
 
+const sectionWait = document.getElementById("section-wait");
+const sectionLogin = document.getElementById("section-login");
+const sectionSentry = document.getElementById("section-sentry");
+
+let visibleSection = sectionWait;
+
+function switchSection(section) {
+  visibleSection.classList.add("disabled");
+  section.classList.remove("disabled");
+  visibleSection = section;
+  // TODO: Focus the `autofocus` field here!
+}
+
+ipc.on("login", event => {
+  switchSection(sectionLogin);
+});
+
 ipc.on("error", (event, result, message) => {
-  section_main.classList.remove("disabled");
-  section_wait.classList.add("disabled");
+  switchSection(sectionLogin);
 
   let text;
 
@@ -42,13 +58,11 @@ ipc.on("sentry", (event, domain) => {
         : `e-mail ending in ${domain.toString()}`
     }.`;
 
-  section_sentry.classList.remove("disabled");
-  section_wait.classList.add("disabled");
-
+  switchSection(sectionSentry);
   input_sentry.focus();
 });
 
-section_main.addEventListener("submit", event => {
+sectionLogin.addEventListener("submit", event => {
   event.preventDefault();
 
   ipc.send("login", {
@@ -57,17 +71,13 @@ section_main.addEventListener("submit", event => {
     rememberPassword: input_remember.value
   });
 
-  section_main.classList.add("disabled");
-  section_wait.classList.remove("disabled");
+  switchSection(sectionWait);
 });
 
-section_sentry.addEventListener("submit", event => {
+sectionSentry.addEventListener("submit", event => {
   event.preventDefault();
 
   ipc.send("login:sentry", input_sentry.value);
 
-  section_sentry.classList.add("disabled");
-  section_wait.classList.remove("disabled");
+  switchSection(sectionWait);
 });
-
-section_main.classList.remove("disabled");

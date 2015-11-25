@@ -46,6 +46,19 @@ label {
   padding: 8px;
 }
 
+#input_sentry {
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 48px;
+  border-radius: 32px;
+  transition: background 0.4s;
+}
+
+#input_sentry:focus {
+  background: linear-gradient(to bottom, #1a1a1a, #222222);
+  outline: none;
+}
+
 /* SpinKit */
 
 .sk-folding-cube {
