@@ -68,10 +68,12 @@ header {
 .message-other {
   align-items: flex-start;
   text-align: left;
+  margin-right: 40px;
 }
 .message-self {
   align-items: flex-end;
   text-align: right;
+  margin-left: 40px;
 }
 .message-timestamp {
   font-size: 10px;
@@ -88,6 +90,8 @@ header {
   padding: 6px;
   border-radius: 4px;
   background-color: #484848;
+  display: inline-block;
+  word-break: break-all;
 }
 .message-echo .message-text {
   background-color: #486868;
