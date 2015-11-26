@@ -23,25 +23,10 @@ const BrowserWindow = electron.BrowserWindow;
 global.Steam = Steam;
 
 const ConfigStore = require("./ConfigStore.js");
+const ChatGroup = require("./ChatGroup.js");
 const personaUtil = require("./persona-util.js");
 
-// This also definitely shouldn't be here.
-// function sendWhenLoaded(webContents, ...args) {
-// Why does Node.js not have ...args yet?
-function sendWhenLoaded(webContents) {
-  const args = Array.from(arguments).slice(1);
-
-  if (webContents.isLoading()) {
-    webContents.once("did-finish-load", () => {
-      // webContents.send(...args);
-      // Seriously?
-      webContents.send.apply(webContents, args);
-    });
-  } else {
-    // webContents.send(...args);
-    webContents.send.apply(webContents, args);
-  }
-}
+const sendWhenLoaded = require("./util.js").sendWhenLoaded;
 
 class SaunaApp extends EventEmitter {
   constructor(options) {
@@ -584,6 +569,60 @@ class SaunaApp extends EventEmitter {
 
     this.friendsWindow.loadURL(`file://${this.appPath}/static/friends.html`);
     this.friendsWindow.show();
+
+    let position = this.friendsWindow.getPosition();
+    let velocity = [0, 0];
+    let moving = false;
+
+    let p1 = position;
+
+    this.friendsWindow.on("move", () => {
+      if (moving) return;
+      let p2 = this.friendsWindow.getPosition();
+      let x1 = p1[0], x2 = p2[0];
+      let y1 = p1[1], y2 = p2[1];
+      p1 = p2;
+      let dx = x2 - x1;
+      let dy = y2 - y1;
+      if (dx !== 0 || dy !== 0) {
+        position = p2;
+        velocity = [dx * 200, dy * 200];
+      }
+    });
+
+    setInterval(() => {
+      if (this.friendsWindow === null) return;
+      let size = this.friendsWindow.getSize();
+      let screenSize = electronScreen.getPrimaryDisplay().workAreaSize;
+      let maxX = screenSize.width - size[0];
+      let maxY = screenSize.height - size[1];
+      // console.log(velocity);
+      let x = position[0] + velocity[0] * (16 / 1000);
+      let y = position[1] + velocity[1] * (16 / 1000);
+      if (x < 0) {
+        x = 0;
+        velocity[0] *= -1;
+      }
+      if (x > maxX) {
+        x = maxX;
+        velocity[0] *= -1;
+      }
+      if (y < 0) {
+        y = 0;
+        velocity[1] *= -1;
+      }
+      if (y > maxY) {
+        y = maxY;
+        velocity[1] *= -1;
+      }
+      moving = true;
+      this.friendsWindow.setPosition(Math.floor(x + 0.5), Math.floor(y + 0.5));
+      moving = false;
+      position[0] = x;
+      position[1] = y;
+      // velocity[0] -= velocity[0] * 2 * (16 / 1000);
+      // velocity[1] -= velocity[1] * 2 * (16 / 1000);
+    }, 16);
   }
 
   buildFriendGroupList() {

@@ -12,20 +12,24 @@ header {
   -webkit-user-select: none;
 }
 
-#user_info {
+.chat {
+  flex: 1;
+}
+
+#user_info, .user-info {
   color: #888;
   flex: 1;
   text-align: right;
   margin-right: 12px;
 }
 
-#user_dropdown {
+#user_dropdown, .user-dropdown {
   margin: 6px;
   width: 40px;
   font-size: 20px;
 }
 
-#messages {
+#messages, .messages {
   /* margin: 0 6px;
   padding: 0 8px; */
   padding: 4px;

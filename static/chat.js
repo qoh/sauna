@@ -105,6 +105,53 @@ class Message extends React.Component {
   }
 }
 
+// class Chat extends React.Component {
+//   constructor(props) {
+//     super(props);
+//
+//     this.state = {
+//       messages: [],
+//       newMessage: ""
+//     };
+//   }
+//
+//   addMessage(message) {
+//     this.setState({messages: this.state.messages.concat(message)});
+//   }
+//
+//   componentWillUpdate(nextProps, nextState) {
+//     console.log("componentWillUpdate");
+//     console.log("scrollTop", ReactDOM.findDOMNode(this.refs.scroll).scrollTop);
+//     console.log("scrollHeight", ReactDOM.findDOMNode(this.refs.scroll).scrollHeight);
+//   }
+//
+//   componentDidUpdate(prevProps, prevState) {
+//     console.log("componentWillUpdate");
+//     console.log("scrollTop", ReactDOM.findDOMNode(this.refs.scroll).scrollTop);
+//     console.log("scrollHeight", ReactDOM.findDOMNode(this.refs.scroll).scrollHeight);
+//   }
+//
+//   render() {
+//     return React.DOM.div({className: "chat"},
+//       React.DOM.header(null,
+//         React.createElement(UserBlock, {
+//           steamID: this.props.steamID,
+//           persona: {} // where am I supposed to get this from?
+//         }),
+//         React.DOM.div({className: "user-info"}),
+//         React.DOM.button({className: "user-dropdown"}, "...")
+//       ),
+//       React.DOM.div({className: "messages", ref: "scroll"},
+//         this.state.messages.map(message => React.createElement(Message, message))
+//       ),
+//       React.DOM.textarea({
+//         rows: 2, autofocus: true,
+//         onChange: event => this.setState({newMessage: event.target.value})
+//       }, this.state.newMessage)
+//     )
+//   }
+// }
+
 function addMessage(options) {
   options.date = options.date || new Date();
 
