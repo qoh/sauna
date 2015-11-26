@@ -79,6 +79,8 @@ class Message extends React.Component {
 
     if (this.props.isEcho) {
       className += " message-echo";
+    } else if (this.props.isHistory) {
+      className += " message-history";
     } else if (text.startsWith("/me ")) {
       text = text.substr(4);
       className += " message-action";
@@ -114,13 +116,18 @@ function addMessage(options) {
   let shouldScroll =
     messages.scrollTop >= messages.scrollHeight - messages.clientHeight;
 
-  messages.appendChild(container);
+  // TODO: binary insert based on date
+  if (options.isHistory) {
+    messages.insertBefore(container, messages.firstChild);
+  } else {
+    messages.appendChild(container);
+  }
 
   if (shouldScroll) {
     messages.scrollTop = messages.scrollHeight;
   }
 
-  if (!options.isSelf) {
+  if (!options.isSelf && !options.isHistory) {
     if (!document.hasFocus()) {
       flashFrame(true);
 
@@ -182,6 +189,24 @@ ipc.on("typing", event => {
   clearTimeout(typingTimeout);
   setTimeout(() => user_info.textContent = "", 15000);
   user_info.textContent = `${userPersona.player_name} is typing a message...`;
+});
+
+ipc.on("chat-history", (event, steamID, messages) => {
+  // console.log("chat-history");
+  // console.log(messages);
+
+  console.log(messages);
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    let message = messages[i];
+
+    addMessage({
+      text: message.message,
+      isSelf: message.steamID !== userSteamID,
+      date: new Date(message.timestamp),
+      isHistory: !message.unread
+    });
+  }
 });
 
 function sendMessage(message) {

@@ -298,6 +298,8 @@ class SaunaApp extends EventEmitter {
       }
     });
 
+    // chatMessage
+
     ipc.on("notify", (event, params) => {
       this.openNotification(params);
     });
@@ -460,6 +462,21 @@ class SaunaApp extends EventEmitter {
     chatWindow.webContents.on("did-finish-load", () => {
       chatWindow.webContents.send("user",
         key, this.user.users[steamID]);
+
+      this.user.getChatHistory(steamID, (success, messages) => {
+        if (!success) {
+          return;
+        }
+
+        chatWindow.webContents.send("chat-history", steamID,
+          messages.map(message => ({
+            message: message.message,
+            steamID: message.steamID.toString(),
+            timestamp: message.timestamp.toString(),
+            unread: message.unread
+          }))
+        );
+      });
     });
 
     return chatWindow;
