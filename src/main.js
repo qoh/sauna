@@ -2,6 +2,10 @@
 /*jshint esnext: true */
 "use strict";
 
+if (process.env.DEBUG) {
+  require("electron-debug")();
+}
+
 const electron = require("electron");
 const dialog = electron.dialog;
 

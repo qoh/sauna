@@ -415,8 +415,8 @@ class SaunaApp extends EventEmitter {
       }
     });
 
+    this.loginWindow.setMenu(null);
     this.loginWindow.loadURL(`file://${this.appPath}/static/login.html`);
-    this.loginWindow.setMenuBarVisibility(false);
 
     return this.loginWindow;
   }
@@ -442,8 +442,8 @@ class SaunaApp extends EventEmitter {
 
     this.chatWindows.set(key, chatWindow);
 
+    chatWindow.setMenu(null);
     chatWindow.loadURL(`file://${this.appPath}/static/chat.html#${key}`);
-    chatWindow.setMenuBarVisibility(false);
     chatWindow.showInactive();
 
     chatWindow.on("closed", () => {
@@ -578,30 +578,6 @@ class SaunaApp extends EventEmitter {
               this.config.set("friends.show-search", item.checked);
             }
           }
-        ]
-      },
-      {
-        label: "Developer",
-        submenu: [
-          {
-            label: "Reload",
-            accelerator: "CmdOrCtrl+R",
-            click: (item, focusedWindow) => {
-              if (focusedWindow) {
-                focusedWindow.reload();
-              }
-            }
-          },
-          {
-            label: "Toggle Developer Tools",
-            accelerator: process.platform == "darwin" ?
-              "Alt+Command+I" : "Ctrl+Shift+I",
-            click(item, focusedWindow) {
-              if (focusedWindow) {
-                focusedWindow.toggleDevTools();
-              }
-            }
-          },
         ]
       }
     ]));
@@ -763,7 +739,7 @@ class SaunaApp extends EventEmitter {
       options
     }));
 
-    note.setMenuBarVisibility(false);
+    note.setMenu(null);
     note.loadURL(`file://${this.appPath}/static/notification.html#${hash}`);
   }
 }
