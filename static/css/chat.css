@@ -99,6 +99,14 @@ header {
 .message-action .message-text {
   background-color: #684848;
 }
+.message-history .message-text {
+  background-color: #3a3a3a;
+  color: #888;
+}
+.message-unread .message-text {
+  background-color: #485448;
+  color: #dfd;
+}
 
 textarea {
   border-top: 2px solid #484848;

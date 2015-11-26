@@ -80,7 +80,11 @@ class Message extends React.Component {
     if (this.props.isEcho) {
       className += " message-echo";
     } else if (this.props.isHistory) {
-      className += " message-history";
+      if (this.props.isUnread) {
+        className += " message-unread";
+      } else {
+        className += " message-history";
+      }
     } else if (text.startsWith("/me ")) {
       text = text.substr(4);
       className += " message-action";
@@ -204,7 +208,8 @@ ipc.on("chat-history", (event, steamID, messages) => {
       text: message.message,
       isSelf: message.steamID !== userSteamID,
       date: new Date(message.timestamp),
-      isHistory: !message.unread
+      isHistory: true,
+      isUnread: message.unread
     });
   }
 });
