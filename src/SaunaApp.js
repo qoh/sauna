@@ -165,6 +165,25 @@ class SaunaApp extends EventEmitter {
       });
     });
 
+    this.user.on("offlineMessages", (count, friends) => {
+      // console.log("offlineMessages", count);
+      // console.log(friends);
+
+      for (let steamID of friends) {
+        // TODO: This absolutely needs to use fetchPersonaMulti!
+        this.fetchPersona(steamID).then(persona => {
+          // console.log(" - Got persona for offline messaging friend", persona.player_name);
+
+          this.notifyEvent("message-offline", steamID, {
+            title: `${persona.player_name}`,
+            body: "sent you messages while you were offline"
+          });
+        });
+
+        this.getChatWindow(steamID).flashFrame(true);
+      }
+    });
+
     this.user.on("tradeRequest", (steamID, respond) => {
       console.log("Incoming trade request from", steamID);
       respond(true);
@@ -392,6 +411,18 @@ class SaunaApp extends EventEmitter {
       } else {
         autoLogIn(data);
       }
+    });
+  }
+
+  fetchPersona(steamID) {
+    return new Promise(resolve => {
+      if (this.user.users[steamID]) {
+        resolve(this.user.users[steamID]);
+      }
+
+      this.user.getPersonas([steamID], personas => {
+        resolve(personas[steamID]);
+      });
     });
   }
 
